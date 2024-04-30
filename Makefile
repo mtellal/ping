@@ -2,14 +2,28 @@
 
 
 
+CC	= gcc
+CFLAGS	= -Wall -Wextra -Werror
+
+NAME	= ft_ping
+
+SRC	= ping.c
+OBJ	= $(SRC:.c=.o)
 
 
 
+all: $(NAME)
 
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) -g -o $(NAME) $^
 
+%.o: %.c
+	$(CC) $(CFLAGS) -g -o $@ -c $<
 
-all:
-	echo "Compiling ..."
+clean:
+	rm -rf $(OBJ)
 
-$(NAME):
-	echo name
+fclean: clean
+	rm -rf $(NAME)
+
+re: fclean $(NAME)
