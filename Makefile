@@ -2,14 +2,20 @@
 
 
 
-CC	= gcc
-CFLAGS	= -Wall -Wextra -Werror
+CC		:=	gcc
+CFLAGS		:=	-Wall -Wextra -Werror
 
-NAME	= ft_ping
+NAME		:=	ft_ping
 
-SRC	= ping.c
-OBJ	= $(SRC:.c=.o)
+SRCFOLDER	:=	src
+SRCFILES	:=	ping.c utils.c packet.c
+SRC		:=	$(addprefix $(SRCFOLDER)/, SRCFILES)
 
+OBJFOLDER 	:=	obj
+OBJ		:=	$(addprefix $(OBJFOLDER)/, $(SRCFILES:.c=.o))
+
+
+INCLUDE		:=	include
 
 
 all: $(NAME)
@@ -17,8 +23,8 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) -g -o $(NAME) $^
 
-%.o: %.c
-	$(CC) $(CFLAGS) -g -o $@ -c $<
+$(OBJFOLDER)/%.o: $(SRCFOLDER)/%.c
+	$(CC) $(CFLAGS) -g -o $@ -c $< -I $(INCLUDE)
 
 clean:
 	rm -rf $(OBJ)
