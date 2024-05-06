@@ -24,6 +24,7 @@ $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) -g -o $(NAME) $^
 
 $(OBJFOLDER)/%.o: $(SRCFOLDER)/%.c
+	mkdir -p $(OBJFOLDER)
 	$(CC) $(CFLAGS) -g -o $@ -c $< -I $(INCLUDE)
 
 clean:

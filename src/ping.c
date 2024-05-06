@@ -49,7 +49,26 @@ int recv_packet(int sockfd, char *ip_s) {
 
 }
 
+struct sockaddr_in *resolve_addr(char * addr){
 
+	struct addrinfo hints;
+	struct addrinfo *res;
+
+
+	memset(&hints, 0, sizeof(hints));
+	memset(&res, 0, sizeof(res));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	int error_code = getaddrinfo(addr, 0, &hints, &res);
+	if (error_code != 0)
+	{
+		//printf("getaddrinfo call failed: %s\n", gai_strerror(error_code));
+		return NULL;
+	}	
+	if (res && res->ai_addr)
+		return (struct sockaddr_in *)res->ai_addr;
+	return NULL;
+}
 
 int main(int argc, char **argv) {
 
@@ -63,10 +82,10 @@ int main(int argc, char **argv) {
 	}
 
 
-		
-	struct sockaddr_in ip_dst;
+	
+	struct sockaddr_in *ip_dst;
 
-
+	/*
 	memset(&ip_dst, 0, sizeof(ip_dst));
 	ip_dst.sin_family = AF_INET;
 	if (inet_pton(AF_INET, "127.0.0.1", &(ip_dst.sin_addr)) != 1)
@@ -76,6 +95,14 @@ int main(int argc, char **argv) {
 	}
 
 	printf("Address successfully created and initialized\n");
+	*/
+
+	ip_dst = resolve_addr(argv[1]);
+
+	if (!ip_dst) {
+		printf("ping: unknown host\n"); 
+		return 1;
+	}
 
 	/////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////
@@ -102,7 +129,7 @@ int main(int argc, char **argv) {
 
 		packet = create_packet();
 
-		if (send_packet(sockfd, ip_dst, packet) == -1)
+		if (send_packet(sockfd, *ip_dst, packet) == -1)
 			return 1;
 
 		recv_packet(sockfd, "127.0.0.5");
