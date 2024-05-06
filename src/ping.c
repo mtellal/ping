@@ -1,59 +1,37 @@
 #include <ft_ping.h>
 
 
-
-// init socket
-//
-// send
-// recv 
-
-
 int send_packet(int sockfd, struct sockaddr_in ip_dst, struct icmp_packet packet) {
 
-	printf("sending packet ...\n");
 	int bytes = sendto(sockfd, &packet, sizeof(packet), 0, (struct sockaddr *)&ip_dst, sizeof(ip_dst));
 	if (bytes == -1) {
 		printf("sendto call failed: %s \n", strerror(errno));
 		return 1;	
 	}
-	printf("sent %i bytes\n", bytes);
 	return 0;
 }
 
-int recv_packet(int sockfd, struct sockaddr_in *ip_src) {
+int recv_packet(int sockfd, char *ip_s, struct sockaddr_in *ip_src) {
 
-	//struct sockaddr_in ip_src;
 	int len;
 	int bytes;
 	unsigned short size = 64;
 	char recv[size];
 
-	/*memset(&ip_src, 0, sizeof(ip_src));
-	ip_src.sin_family = AF_INET;
-	if (inet_pton(AF_INET, ip_s, &(ip_src.sin_addr)) != 1)
-	{
-		printf("inet_pton (src) call failed: %s \n", strerror(errno));
-		return 1;
-	}
-	*/
 	len = sizeof(ip_src);
-
 	bytes = recvfrom(sockfd, recv, size, 0, (struct sockaddr*)ip_src, (socklen_t*)&len);
-
 	if (bytes == -1) {
 		printf("bytes = -1\n");
 	}
-	printf("received %i bytes\n", bytes);
-
+	// 64 bytes from 216.58.213.78: icmp_seq=0 ttl=63 time=2.461 ms
+	printf("%u bytes from %s: icmp_seq=", bytes, ip_s);
 	return 0;
-
 }
 
 struct sockaddr_in *resolve_addr(char * addr){
 
 	struct addrinfo hints;
 	struct addrinfo *res;
-
 
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
@@ -71,20 +49,15 @@ struct sockaddr_in *resolve_addr(char * addr){
 }
 
 int main(int argc, char **argv) {
-
-
 	(void)argc;
 	(void)argv;
 
 	if (argc != 2) {
-		printf("ping: usage error: Destination address required\n");
+		//printf("ping: usage error: Destination address required\n");
 		return 1;
 	}
-
-
 	
 	struct sockaddr_in *ip_dst;
-
 	ip_dst = resolve_addr(argv[1]);
 
 	if (!ip_dst) {
@@ -92,42 +65,30 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	/////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////
+	char host[NI_MAXHOST];
 
-	printf("Creating socket \n");
+	int err = getnameinfo((struct sockaddr *)ip_dst, sizeof(*ip_dst), host, NI_MAXHOST, 0 ,0, NI_NUMERICHOST);
+	if (err != 0) {
+		//printf("getnameinfo call failed %s \n", gai_strerror(err));
+		return 1;
+	}
 
+	printf("PING %s (%s): 56 data bytes\n", argv[1], host);
+	// 64 bytes from 216.58.213.78: icmp_seq=0 ttl=63 time=2.461 ms
 
 	int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-
 	if (sockfd == -1)
 	{
 		printf("socker call failed: %s  \n", strerror(errno));
 		return 0;
 	}
-
-	printf("socket successfuly created\n");
-
 	
-	while (1) {
-	
-		printf("creating the packet \n");
-	
+	while (1) {	
 		struct icmp_packet packet;
-
 		packet = create_packet();
-
 		if (send_packet(sockfd, *ip_dst, packet) == -1)
 			return 1;
-
-		recv_packet(sockfd, ip_dst);
-
-		/*
-		unsigned char *b = (unsigned char*)recv;
-		for (int i = 0; i < 64; i++) {
-			printf("%x ", b[i]);
-		}
-		*/
+		recv_packet(sockfd, host, ip_dst);
 		sleep(1);
 		printf("\n");
 	}
