@@ -73,7 +73,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	printf("PING %s (%s): 56 data bytes\n", argv[1], host);
+	unsigned short data_bytes = SIZE_PACKET - sizeof(struct icmphdr);
+	printf("PING %s (%s): %d data bytes\n", argv[1], host, data_bytes);
 	// 64 bytes from 216.58.213.78: icmp_seq=0 ttl=63 time=2.461 ms
 
 	int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
