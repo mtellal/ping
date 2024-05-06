@@ -20,25 +20,25 @@ int send_packet(int sockfd, struct sockaddr_in ip_dst, struct icmp_packet packet
 	return 0;
 }
 
-int recv_packet(int sockfd, char *ip_s) {
+int recv_packet(int sockfd, struct sockaddr_in *ip_src) {
 
-	struct sockaddr_in ip_src;
+	//struct sockaddr_in ip_src;
 	int len;
 	int bytes;
 	unsigned short size = 64;
 	char recv[size];
 
-	memset(&ip_src, 0, sizeof(ip_src));
+	/*memset(&ip_src, 0, sizeof(ip_src));
 	ip_src.sin_family = AF_INET;
 	if (inet_pton(AF_INET, ip_s, &(ip_src.sin_addr)) != 1)
 	{
 		printf("inet_pton (src) call failed: %s \n", strerror(errno));
 		return 1;
 	}
-
+	*/
 	len = sizeof(ip_src);
 
-	bytes = recvfrom(sockfd, recv, size, 0, (struct sockaddr*)&ip_src, (socklen_t*)&len);
+	bytes = recvfrom(sockfd, recv, size, 0, (struct sockaddr*)ip_src, (socklen_t*)&len);
 
 	if (bytes == -1) {
 		printf("bytes = -1\n");
@@ -85,18 +85,6 @@ int main(int argc, char **argv) {
 	
 	struct sockaddr_in *ip_dst;
 
-	/*
-	memset(&ip_dst, 0, sizeof(ip_dst));
-	ip_dst.sin_family = AF_INET;
-	if (inet_pton(AF_INET, "127.0.0.1", &(ip_dst.sin_addr)) != 1)
-	{
-		printf("inet_pton  call failed: %s \n", strerror(errno));
-		return 0;
-	}
-
-	printf("Address successfully created and initialized\n");
-	*/
-
 	ip_dst = resolve_addr(argv[1]);
 
 	if (!ip_dst) {
@@ -132,7 +120,7 @@ int main(int argc, char **argv) {
 		if (send_packet(sockfd, *ip_dst, packet) == -1)
 			return 1;
 
-		recv_packet(sockfd, "127.0.0.5");
+		recv_packet(sockfd, ip_dst);
 
 		/*
 		unsigned char *b = (unsigned char*)recv;
