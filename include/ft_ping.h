@@ -37,6 +37,9 @@ unsigned short		checksum(void *data, int len);
 struct			icmp_packet create_packet();
 struct icmp_packet	create_packet();
 
+// recv.c
+unsigned char 	*recv_packet(int sockfd, char *ip_s, struct sockaddr_in *ip_src);
+int 		parse_packet(unsigned char *data);
 
 
 #endif
