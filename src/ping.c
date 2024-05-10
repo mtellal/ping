@@ -40,12 +40,21 @@ int main(int argc, char **argv) {
 	(void)argc;
 	(void)argv;
 
+	struct sockaddr_in *	ip_dst;
+	char			host[NI_MAXHOST];
+	unsigned short		data_bytes;
+	int			sockfd;	
+	unsigned char *		data;
+	struct icmp_packet	icmp_packet;
+
+
+	data_bytes = SIZE_PACKET - sizeof(struct icmphdr);
+
 	if (argc != 2) {
 		//printf("ping: usage error: Destination address required\n");
 		return 1;
 	}
 	
-	struct sockaddr_in *ip_dst;
 	ip_dst = resolve_addr(argv[1]);
 
 	if (!ip_dst) {
@@ -53,32 +62,26 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	char host[NI_MAXHOST];
-
 	int err = getnameinfo((struct sockaddr *)ip_dst, sizeof(*ip_dst), host, NI_MAXHOST, 0 ,0, NI_NUMERICHOST);
 	if (err != 0) {
 		//printf("getnameinfo call failed %s \n", gai_strerror(err));
 		return 1;
 	}
 
-	unsigned short data_bytes = SIZE_PACKET - sizeof(struct icmphdr);
 	printf("PING %s (%s): %d data bytes\n", argv[1], host, data_bytes);
 
-	int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd == -1)
 	{
 		printf("socker call failed: %s  \n", strerror(errno));
 		return 0;
 	}
 
-	unsigned char *data;
-
 	while (1) {	
-		struct icmp_packet packet;
-		packet = create_packet();
-		if (send_packet(sockfd, *ip_dst, packet) == -1)
+		icmp_packet = create_packet();
+		if (send_packet(sockfd, *ip_dst, icmp_packet) == -1)
 			return 1;
-		data = recv_packet(sockfd, host, ip_dst);
+		data = recv_packet(sockfd, ip_dst);
 		parse_packet(data);
 		sleep(1);
 		printf("\n");

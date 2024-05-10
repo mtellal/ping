@@ -15,7 +15,7 @@ OBJFOLDER 	:=	obj
 OBJ		:=	$(addprefix $(OBJFOLDER)/, $(SRCFILES:.c=.o))
 
 
-INCLUDE		:=	include
+INCLUDE		:=	./
 
 
 all: $(NAME)

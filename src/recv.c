@@ -1,7 +1,7 @@
 
 #include <ft_ping.h>
 
-unsigned char *recv_packet(int sockfd, char *ip_s, struct sockaddr_in *ip_src) {
+unsigned char *recv_packet(int sockfd, struct sockaddr_in *ip_src) {
 
 	int len;
 	int bytes;
@@ -14,8 +14,6 @@ unsigned char *recv_packet(int sockfd, char *ip_s, struct sockaddr_in *ip_src) {
 	if (bytes == -1) {
 		printf("bytes = -1\n");
 	}
-	// 64 bytes from 216.58.213.78: icmp_seq=0 ttl=63 time=2.461 ms
-	printf("%u bytes from %s: icmp_seq= \n", bytes, ip_s);
 	return datas;
 }
 
@@ -122,15 +120,23 @@ int	parse_packet(unsigned char *datas) {
 
 	struct iphdr	*iphdr;
 	struct icmphdr	*icmphdr;
+
 	unsigned short	len_iphdr;
+	unsigned short	data_bytes;
 
+
+	(void)icmphdr;
 	iphdr = (struct iphdr *)datas;
-	len_iphdr = iphdr->ihl * 4; 
+	len_iphdr = iphdr->ihl * 4;
+	
 	icmphdr = (struct icmphdr *)(datas + len_iphdr);	
-	print_icmphdr(icmphdr);	
-	//print_iphdr(datas);
+	
+	data_bytes = ntohs(iphdr->tot_len) - len_iphdr;
 
+	char src[INET_ADDRSTRLEN];
+	const char *ip_src = inet_ntop(AF_INET, &iphdr->saddr, src, INET_ADDRSTRLEN);
 
+	printf("%u bytes from %s: icmp_seq= \n", data_bytes, ip_src);
 	return 1;
 }
 

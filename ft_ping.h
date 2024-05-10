@@ -23,7 +23,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 
-
+#include <stdlib.h>
 
 
 #define SIZE_PACKET 64
@@ -38,7 +38,7 @@ struct			icmp_packet create_packet();
 struct icmp_packet	create_packet();
 
 // recv.c
-unsigned char 	*recv_packet(int sockfd, char *ip_s, struct sockaddr_in *ip_src);
+unsigned char 	*recv_packet(int sockfd, struct sockaddr_in *ip_src);
 int 		parse_packet(unsigned char *data);
 
 
