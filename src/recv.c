@@ -1,7 +1,7 @@
 
 #include <ft_ping.h>
 
-unsigned char *recv_packet(int sockfd, struct sockaddr_in *ip_src) {
+unsigned char *recv_packet(int sockfd, struct sockaddr_in *ip_src, struct timeval_s *tv) {
 
 	int len;
 	int bytes;
@@ -11,9 +11,11 @@ unsigned char *recv_packet(int sockfd, struct sockaddr_in *ip_src) {
 	datas = malloc(size);
 	len = sizeof(ip_src);
 	bytes = recvfrom(sockfd, datas, size, 0, (struct sockaddr*)ip_src, (socklen_t*)&len);
+	gettimeofday(&tv->tv_recv, NULL);
 	if (bytes == -1) {
 		printf("bytes = -1\n");
 	}
+
 	return datas;
 }
 
@@ -116,7 +118,7 @@ void print_icmphdr(struct icmphdr *icmphdr) {
 	printf("sequence: %x (%i)\n", ntohs(icmphdr->un.echo.sequence), ntohs(icmphdr->un.echo.sequence));	
 }
 
-int	parse_packet(unsigned char *datas) {
+int	parse_packet(unsigned char *datas, struct timeval_s *tv) {
 
 	struct iphdr	*iphdr;
 	struct icmphdr	*icmphdr;
@@ -124,19 +126,29 @@ int	parse_packet(unsigned char *datas) {
 	unsigned short	len_iphdr;
 	unsigned short	data_bytes;
 
+	char		src[INET_ADDRSTRLEN];
+	const char	*ip_src;
 
-	(void)icmphdr;
+	struct stat_s	*stat;
+
 	iphdr = (struct iphdr *)datas;
 	len_iphdr = iphdr->ihl * 4;
 	
 	icmphdr = (struct icmphdr *)(datas + len_iphdr);	
 	
 	data_bytes = ntohs(iphdr->tot_len) - len_iphdr;
+	
+	ip_src = inet_ntop(AF_INET, &iphdr->saddr, src, INET_ADDRSTRLEN);
+	
+	stat = get_stat();
+	stat->p_recv++;
+	
+	struct timeval diff;
 
-	char src[INET_ADDRSTRLEN];
-	const char *ip_src = inet_ntop(AF_INET, &iphdr->saddr, src, INET_ADDRSTRLEN);
+	diff.tv_sec = tv->tv_recv.tv_sec - tv->tv_send.tv_sec;
+	diff.tv_usec = tv->tv_recv.tv_usec - tv->tv_send.tv_usec;
 
-	printf("%u bytes from %s: icmp_seq= \n", data_bytes, ip_src);
+	printf("%u bytes from %s: icmp_seq=%u ttl=%u time=%ld ms\n", data_bytes, ip_src, icmphdr->un.echo.sequence, iphdr->ttl, diff.tv_usec);
 	return 1;
 }
 

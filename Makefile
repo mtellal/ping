@@ -8,7 +8,7 @@ CFLAGS		:=	-Wall -Wextra -Werror
 NAME		:=	ft_ping
 
 SRCFOLDER	:=	src
-SRCFILES	:=	ping.c utils.c packet.c recv.c
+SRCFILES	:=	ping.c utils.c packet.c recv.c stat.c
 SRC		:=	$(addprefix $(SRCFOLDER)/, SRCFILES)
 
 OBJFOLDER 	:=	obj
