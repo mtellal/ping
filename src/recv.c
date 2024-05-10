@@ -118,37 +118,59 @@ void print_icmphdr(struct icmphdr *icmphdr) {
 	printf("sequence: %x (%i)\n", ntohs(icmphdr->un.echo.sequence), ntohs(icmphdr->un.echo.sequence));	
 }
 
-int	parse_packet(unsigned char *datas, struct timeval_s *tv) {
 
-	struct iphdr	*iphdr;
-	struct icmphdr	*icmphdr;
+int	print_packet_infos(struct iphdr *iphdr, uint16_t len_iphdr, struct icmphdr *icmphdr) {
 
-	unsigned short	len_iphdr;
-	unsigned short	data_bytes;
 
+	unsigned short	bytes;
 	char		src[INET_ADDRSTRLEN];
-	const char	*ip_src;
 
-	struct stat_s	*stat;
+	memset(src, 0, INET_ADDRSTRLEN);
+	bytes = ntohs(iphdr->tot_len) - len_iphdr;	
+	if (inet_ntop(AF_INET, &iphdr->saddr, src, INET_ADDRSTRLEN) == NULL) {
+		printf("Error: (recv packet) inet_ntop call failed (bad address) %s\n", strerror(errno));
+		return (-1);
+	}	
+	printf("%u bytes from %s: icmp_seq=%u ttl=%u ", bytes, src, icmphdr->un.echo.sequence, iphdr->ttl);
+	return 0;
+}
 
-	iphdr = (struct iphdr *)datas;
-	len_iphdr = iphdr->ihl * 4;
-	
-	icmphdr = (struct icmphdr *)(datas + len_iphdr);	
-	
-	data_bytes = ntohs(iphdr->tot_len) - len_iphdr;
-	
-	ip_src = inet_ntop(AF_INET, &iphdr->saddr, src, INET_ADDRSTRLEN);
-	
-	stat = get_stat();
-	stat->p_recv++;
-	
+
+void	print_time(struct timeval_s *tv, struct stat_s *stat) {
+
 	struct timeval diff;
 
 	diff.tv_sec = tv->tv_recv.tv_sec - tv->tv_send.tv_sec;
 	diff.tv_usec = tv->tv_recv.tv_usec - tv->tv_send.tv_usec;
 
-	printf("%u bytes from %s: icmp_seq=%u ttl=%u time=%ld ms\n", data_bytes, ip_src, icmphdr->un.echo.sequence, iphdr->ttl, diff.tv_usec);
+	if (!stat->min || stat->min > diff.tv_usec)
+		stat->min = diff.tv_usec;
+	if (!stat->max || stat->max < diff.tv_usec)
+		stat->max = diff.tv_usec;
+	stat->avg += diff.tv_usec;
+	stat->stddev = 654;
+
+	printf("time=%ld,%03ld ms\n", diff.tv_usec / 1000, diff.tv_usec % 1000);
+}
+
+
+int	parse_packet(unsigned char *datas, struct timeval_s *tv) {
+
+	struct iphdr	*iphdr;
+	uint16_t	len_iphdr;
+	struct icmphdr	*icmphdr;
+	
+	struct stat_s	*stat;
+
+	iphdr = (struct iphdr *)datas;
+	len_iphdr = iphdr->ihl * 4;	
+	icmphdr = (struct icmphdr *)(datas + len_iphdr);		
+	
+	stat = get_stat();
+	stat->p_recv++;
+	
+	print_packet_infos(iphdr, len_iphdr, icmphdr);
+	print_time(tv, stat);
 	return 1;
 }
 

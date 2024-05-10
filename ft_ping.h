@@ -43,10 +43,10 @@ struct stat_s {
 	char		*host;
 	unsigned short	p_sent;
 	unsigned short	p_recv;
-	unsigned short	min; // timestamp
-	unsigned short	avg; // timestamp
-	unsigned short	max; // timestamp
-	unsigned short	stddef; // timestamp
+	suseconds_t	min; 
+	suseconds_t	avg; 
+	suseconds_t	max; 
+	suseconds_t	stddev; 
 };
 
 

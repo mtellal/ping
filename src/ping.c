@@ -44,10 +44,11 @@ void signalhandler(int s) {
 
 	(void)s;	
 	stat = get_stat();
+	stat->avg /= stat->p_recv;
 	loss = ((1 - ((float)stat->p_recv / (float)stat->p_sent)) * 100);
 	printf("--- %s ping statistics ---\n", stat->host);
 	printf("%i packets transmitted, %i packets received, %u%% packet loss\n", stat->p_sent, stat->p_recv, loss);
-	printf("round-trip min/avg/max/stddev = %s/%s/%s/%s ms\n", "", "", "", "");
+	printf("round-trip min/avg/max/stddev = %ld,%03ld/%ld,%03ld/%ld,%03ld/%ld,%03ld ms\n", stat-> min / 1000, stat->min % 1000, stat->avg / 1000, stat->avg % 1000, stat->max / 1000, stat->max % 1000, stat->stddev / 1000, stat->stddev % 1000);
 	exit(EXIT_SUCCESS);
 }
 
@@ -97,6 +98,7 @@ int main(int argc, char **argv) {
 	struct timeval_s tv;
 
 	while (1) {	
+		memset(&tv, 0, sizeof(tv));
 		icmp_packet = create_packet();
 		if (send_packet(sockfd, *ip_dst, icmp_packet, &tv) == -1)
 			return 1;
