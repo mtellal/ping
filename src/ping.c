@@ -68,8 +68,6 @@ int main(int argc, char **argv) {
 	char			host[INET_ADDRSTRLEN];
 	unsigned short		data_bytes;
 	int			sockfd;	
-	unsigned char *		data;
-	struct icmp_packet	icmp_packet;
 	struct stat_s		*stat;
 
 	unsigned short		w_time;
@@ -104,15 +102,11 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	struct timeval_s tv;
-
 	while (1) {	
-		memset(&tv, 0, sizeof(tv));
-		icmp_packet = create_packet();
-		if (send_packet(sockfd, *ip_dst, icmp_packet, &tv) == -1)
+		if (send_packet(sockfd, *ip_dst) == -1)
 			return 1;
-		data = recv_packet(sockfd, ip_dst, &tv);
-		parse_packet(data, &tv);
+		if (recv_packet(sockfd, ip_dst) == -1)
+			return 1;
 		sleep(w_time);
 	}
 }

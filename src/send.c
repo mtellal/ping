@@ -2,43 +2,46 @@
 
 unsigned short checksum(void *b, int len) {    
 	unsigned short *buf = b;
-	unsigned int sum = 0;
+	unsigned int 	sum = 0;
 
 	for (sum = 0; len > 1; len -= 2)
 		sum += *buf++;
 	if (len == 1)
 		sum += *(unsigned char *)buf;
 	while (sum >> 16)
-		sum += (sum >> 16) + (sum & 0xffff);
+		sum = (sum >> 16) + (sum & 0xffff);
 	return ~sum;
 }
 
 struct icmp_packet create_packet(){
 
-	static int msg_count = 0;
-	struct icmp_packet packet;
+	static int		msg_count = 0;
+	struct icmp_packet	packet;
+	struct timeval		t;
 
         memset(&packet, 0, sizeof(packet));
 
-	packet.icmphdr.type = ICMP_ECHO; // marco in netinet/ip_icmp.h 
-	packet.icmphdr.code = 0; // code from rfc
-
+	packet.icmphdr.type = ICMP_ECHO;  
+	packet.icmphdr.code = 0; 
 	packet.icmphdr.un.echo.id = getpid();
 	packet.icmphdr.un.echo.sequence = msg_count++;
 
+	gettimeofday(&t, NULL);
+	memcpy(packet.data, &t, sizeof(t));
+
 	packet.icmphdr.checksum = checksum(&packet, sizeof(packet));
-	//printf("checksum calculated: %i\n", packet.icmphdr.checksum);
 	return packet;
 }
 
-int send_packet(int sockfd, struct sockaddr_in ip_dst, struct icmp_packet packet, struct timeval_s *tv) {
+int send_packet(int sockfd, struct sockaddr_in ip_dst) {
 
-	int		bytes;
-	struct stat_s	*stat;
+	int			bytes;
+	struct stat_s		*stat;
+	struct icmp_packet	icmp_packet;
 
+	icmp_packet = create_packet();
 	stat = get_stat();
-	gettimeofday(&tv->tv_send, NULL);
-	bytes = sendto(sockfd, &packet, sizeof(packet), 0, (struct sockaddr *)&ip_dst, sizeof(ip_dst));
+	bytes = sendto(sockfd, &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *)&ip_dst, sizeof(ip_dst));
 	if (bytes == -1) {
 		printf("sendto call failed: %s \n", strerror(errno));
 		return 1;	

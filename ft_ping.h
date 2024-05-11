@@ -34,12 +34,6 @@
 
 #define SIZE_PACKET 64
 
-struct timeval_s {
-	struct timeval tv_send;
-	struct timeval tv_recv;
-};
-
-
 struct stat_s {
 	char			*host;
 	unsigned short		p_sent;
@@ -67,14 +61,13 @@ struct			icmp_packet create_packet();
 struct icmp_packet	create_packet();
 
 // recv.c
-unsigned char 	*recv_packet(int sockfd, struct sockaddr_in *ip_src, struct timeval_s *tv);
-int 		parse_packet(unsigned char *data, struct timeval_s *tv);
+int		recv_packet(int sockfd, struct sockaddr_in *ip_src);
+int 		parse_packet(unsigned char *data, struct timeval *tv_recv);
 
 // send.c
 unsigned short checksum(void *b, int len);
 struct icmp_packet		create_packet();
-int						send_packet(int sockfd, struct sockaddr_in ip_dst, 
-							struct icmp_packet packet, struct timeval_s *tv);
+int						send_packet(int sockfd, struct sockaddr_in ip_dst);
 
 // utils.c
 void display_datas(unsigned char *datas, int len);

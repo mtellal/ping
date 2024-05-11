@@ -1,22 +1,25 @@
 
 #include <ft_ping.h>
 
-unsigned char *recv_packet(int sockfd, struct sockaddr_in *ip_src, struct timeval_s *tv) {
+int	recv_packet(int sockfd, struct sockaddr_in *ip_src) {
 
-	int len;
-	int bytes;
-	unsigned short size = 64;
-	unsigned char *datas = NULL;
+	int 			len;
+	int 			bytes;
+	unsigned short 		size = 64;
+	unsigned char 		*datas = NULL;
+	struct timeval		tv_recv;
 
 	datas = malloc(size);
 	len = sizeof(ip_src);
 	bytes = recvfrom(sockfd, datas, size, 0, (struct sockaddr*)ip_src, (socklen_t*)&len);
-	gettimeofday(&tv->tv_recv, NULL);
+	gettimeofday(&tv_recv, NULL);
 	if (bytes == -1) {
 		printf("bytes = -1\n");
+		return -1;
 	}
 
-	return datas;
+	parse_packet(datas, &tv_recv);
+	return 0;
 }
 
 int	print_packet_infos(struct iphdr *iphdr, uint16_t len_iphdr, struct icmphdr *icmphdr) {
@@ -35,12 +38,17 @@ int	print_packet_infos(struct iphdr *iphdr, uint16_t len_iphdr, struct icmphdr *
 }
 
 
-void	print_time(struct timeval_s *tv, struct stat_s *stat) {
+void	print_time(struct timeval *tv_send, struct timeval *tv_recv) {
 
 	struct timeval	diff;
+	struct stat_s	*stat;
+
+
+	stat = get_stat();
+	stat->p_recv++;
 
 	//diff.tv_sec = tv->tv_recv.tv_sec - tv->tv_send.tv_sec;
-	diff.tv_usec = tv->tv_recv.tv_usec - tv->tv_send.tv_usec;
+	diff.tv_usec = tv_recv->tv_usec - tv_send->tv_usec;
 
 	if (!stat->min || stat->min > diff.tv_usec)
 		stat->min = diff.tv_usec;
@@ -53,23 +61,20 @@ void	print_time(struct timeval_s *tv, struct stat_s *stat) {
 }
 
 
-int	parse_packet(unsigned char *datas, struct timeval_s *tv) {
+int	parse_packet(unsigned char *datas, struct timeval *tv_recv) {
 
 	struct iphdr	*iphdr;
 	uint16_t	len_iphdr;
 	struct icmphdr	*icmphdr;
-	
-	struct stat_s	*stat;
+	struct timeval	*tv_send;
 
 	iphdr = (struct iphdr *)datas;
 	len_iphdr = iphdr->ihl * 4;	
 	icmphdr = (struct icmphdr *)(datas + len_iphdr);		
-	
-	stat = get_stat();
-	stat->p_recv++;
+	tv_send = (struct timeval *)(datas + len_iphdr + 8);
 	
 	print_packet_infos(iphdr, len_iphdr, icmphdr);
-	print_time(tv, stat);
+	print_time(tv_send, tv_recv);
 	return 1;
 }
 
