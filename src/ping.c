@@ -1,20 +1,5 @@
 #include <ft_ping.h>
 
-int send_packet(int sockfd, struct sockaddr_in ip_dst, struct icmp_packet packet, struct timeval_s *tv) {
-
-	int		bytes;
-	struct stat_s	*stat;
-
-	stat = get_stat();
-	gettimeofday(&tv->tv_send, NULL);
-	bytes = sendto(sockfd, &packet, sizeof(packet), 0, (struct sockaddr *)&ip_dst, sizeof(ip_dst));
-	if (bytes == -1) {
-		printf("sendto call failed: %s \n", strerror(errno));
-		return 1;	
-	}
-	stat->p_sent++;
-	return 0;
-}
 
 struct sockaddr_in *resolve_addr(char * addr){
 
@@ -36,19 +21,43 @@ struct sockaddr_in *resolve_addr(char * addr){
 	return NULL;
 }
 
+double	calcul_stddev(struct stat_s *stat) {
+	
+	double		mean;
+	unsigned int	i;
+	
+	double		mu;
+	double		tmp;
+
+
+	mean = stat->tot / stat->p_recv;
+	i = 0;
+	while (i < stat->p_recv) {
+		tmp = (stat->rtts[i] - mean);
+		tmp *= tmp;
+		mu += tmp;
+		i++;	
+	}
+	return sqrt(mu / stat->p_recv);
+}
+
 
 void signalhandler(int s) {
 	
 	struct stat_s	*stat;
 	unsigned short	loss;
+	suseconds_t	stddev;
+	suseconds_t	avg;
 
 	(void)s;	
 	stat = get_stat();
-	stat->avg /= stat->p_recv;
+	avg = stat->tot / stat->p_recv;
 	loss = ((1 - ((float)stat->p_recv / (float)stat->p_sent)) * 100);
+	stddev = (suseconds_t)calcul_stddev(stat);
+	
 	printf("--- %s ping statistics ---\n", stat->host);
 	printf("%i packets transmitted, %i packets received, %u%% packet loss\n", stat->p_sent, stat->p_recv, loss);
-	printf("round-trip min/avg/max/stddev = %ld,%03ld/%ld,%03ld/%ld,%03ld/%ld,%03ld ms\n", stat-> min / 1000, stat->min % 1000, stat->avg / 1000, stat->avg % 1000, stat->max / 1000, stat->max % 1000, stat->stddev / 1000, stat->stddev % 1000);
+	printf("round-trip min/avg/max/stddev = %ld,%03ld/%ld,%03ld/%ld,%03ld/%ld,%03ld ms\n", stat->min / 1000, stat->min % 1000, avg / 1000, avg % 1000, stat->max / 1000, stat->max % 1000, stddev / 1000, stddev % 1000);
 	exit(EXIT_SUCCESS);
 }
 

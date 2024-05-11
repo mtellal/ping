@@ -8,7 +8,7 @@ CFLAGS		:=	-Wall -Wextra -Werror
 NAME		:=	ft_ping
 
 SRCFOLDER	:=	src
-SRCFILES	:=	ping.c utils.c packet.c recv.c stat.c
+SRCFILES	:=	ping.c utils.c send.c recv.c stat.c
 SRC		:=	$(addprefix $(SRCFOLDER)/, SRCFILES)
 
 OBJFOLDER 	:=	obj
@@ -21,7 +21,7 @@ INCLUDE		:=	./
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) -g -o $(NAME) $^
+	$(CC) $(CFLAGS) -g -o $(NAME) $^ -lm
 
 $(OBJFOLDER)/%.o: $(SRCFOLDER)/%.c
 	mkdir -p $(OBJFOLDER)

@@ -29,6 +29,8 @@
 
 #include <sys/time.h>
 
+#include <math.h>
+#include <stdio.h>
 
 #define SIZE_PACKET 64
 
@@ -38,15 +40,15 @@ struct timeval_s {
 };
 
 
-
 struct stat_s {
-	char		*host;
-	unsigned short	p_sent;
-	unsigned short	p_recv;
-	suseconds_t	min; 
-	suseconds_t	avg; 
-	suseconds_t	max; 
-	suseconds_t	stddev; 
+	char			*host;
+	unsigned short		p_sent;
+	unsigned short		p_recv;
+	suseconds_t		min; 
+	suseconds_t		tot; 
+	suseconds_t		max; 
+	suseconds_t		stddev; 
+	suseconds_t		rtts[0xffff];
 };
 
 
@@ -68,7 +70,15 @@ struct icmp_packet	create_packet();
 unsigned char 	*recv_packet(int sockfd, struct sockaddr_in *ip_src, struct timeval_s *tv);
 int 		parse_packet(unsigned char *data, struct timeval_s *tv);
 
-int 		send_packet(int sockfd, struct sockaddr_in ip_dst, struct icmp_packet packet, struct timeval_s *tv);
+// send.c
+unsigned short checksum(void *b, int len);
+struct icmp_packet		create_packet();
+int						send_packet(int sockfd, struct sockaddr_in ip_dst, 
+							struct icmp_packet packet, struct timeval_s *tv);
 
+// utils.c
+void display_datas(unsigned char *datas, int len);
+void print_iphdr(struct iphdr *iphdr);
+void print_icmphdr(struct icmphdr *icmphdr);
 
 #endif
