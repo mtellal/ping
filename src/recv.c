@@ -14,7 +14,7 @@ int	recv_packet(int sockfd, struct sockaddr_in *ip_src) {
 	bytes = recvfrom(sockfd, datas, size, 0, (struct sockaddr*)ip_src, (socklen_t*)&len);
 	gettimeofday(&tv_recv, NULL);
 	if (bytes == -1) {
-		printf("bytes = -1\n");
+		printf("receive packet: 0 bytes\n");
 		return -1;
 	}
 
@@ -73,6 +73,23 @@ int	parse_packet(unsigned char *datas, struct timeval *tv_recv) {
 	icmphdr = (struct icmphdr *)(datas + len_iphdr);		
 	tv_send = (struct timeval *)(datas + len_iphdr + 8);
 	
+	char *TYPES[] = {
+		[ICMP_ECHOREPLY] = "Echo Reply",
+		[ICMP_DEST_UNREACH] = "Destination Unreachable",
+		[ICMP_SOURCE_QUENCH] = "Source Quench",
+		[ICMP_REDIRECT] = "Redirect (change route)",
+		[ICMP_ECHO] = "Echo Request",
+		[ICMP_TIME_EXCEEDED] = "Destination Unreachable",
+		[ICMP_PARAMETERPROB] = "Parameter Problem",
+		[ICMP_TIMESTAMP] = "Timestamp Request",
+		[ICMP_TIMESTAMPREPLY] = "Timestamp Reply",
+		[ICMP_INFO_REQUEST] = "Information Request",
+		[ICMP_INFO_REPLY] = "Information Reply",
+		[ICMP_ADDRESS] = "Address Mask Request",
+		[ICMP_ADDRESSREPLY] = "Address Mask Reply",
+	};	
+	(void)TYPES;	
+
 	print_packet_infos(iphdr, len_iphdr, icmphdr);
 	print_time(tv_send, tv_recv);
 	return 1;

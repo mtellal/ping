@@ -32,6 +32,12 @@
 #include <math.h>
 #include <stdio.h>
 
+#include <sysexits.h>
+
+#define OPT_VERBOSE	1
+#define OPT_TTL		2
+
+
 #define SIZE_PACKET 64
 
 struct stat_s {
@@ -43,6 +49,7 @@ struct stat_s {
 	suseconds_t		max; 
 	suseconds_t		stddev; 
 	suseconds_t		rtts[0xffff];
+	unsigned short		options;
 };
 
 

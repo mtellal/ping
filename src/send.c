@@ -43,8 +43,8 @@ int send_packet(int sockfd, struct sockaddr_in ip_dst) {
 	stat = get_stat();
 	bytes = sendto(sockfd, &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *)&ip_dst, sizeof(ip_dst));
 	if (bytes == -1) {
-		printf("sendto call failed: %s \n", strerror(errno));
-		return 1;	
+		printf("sending packet: %s \n", strerror(errno));
+		exit(1);
 	}
 	stat->p_sent++;
 	return 0;

@@ -12,10 +12,7 @@ struct sockaddr_in *resolve_addr(char * addr){
 	hints.ai_socktype = SOCK_STREAM;
 	int error_code = getaddrinfo(addr, 0, &hints, &res);
 	if (error_code != 0)
-	{
-		//printf("getaddrinfo call failed: %s\n", gai_strerror(error_code));
 		return NULL;
-	}	
 	if (res && res->ai_addr)
 		return (struct sockaddr_in *)res->ai_addr;
 	return NULL;
@@ -62,31 +59,93 @@ void signalhandler(int s) {
 }
 
 
+void	print_help() {
+
+	printf("Usage: ping [OPTION...] HOST ...\nSend ICMP ECHO_REQUEST packets to network hosts.\n");
+	printf("\n");
+	printf("Options:\n");
+	printf("\t-?,  give this help list\n");
+	printf("\t-v,  verbose output\n");
+	printf("\t--ttl=N,  specify N as time-to-live\n");
+	exit(EXIT_SUCCESS);
+}
+
+
+int	valid_options(char *argv) {
+	char		*options[] = { "-v", "-?", "--ttl=" };
+	uint8_t		i;
+	
+	i = 0;
+	while (i < 3) {
+		if (!memcmp(options[i], argv, strlen(options[i])))
+			return 1;
+		i++;
+	}
+	return 0;
+}
+
+void	exit_miss_host() {
+	printf("ping: missing host operand\nTry 'ping -?' for more information\n");
+	exit(EX_USAGE); //64 - sysexits.h
+}
+
+char	*parse_args(int argc, char **argv) {
+
+	struct stat_s	*stat;
+	uint16_t	i;
+	
+	i = 1;
+	stat = get_stat();
+	stat->options = 0;
+	while (i < argc) {
+		if (valid_options(argv[i]) && argc - 1 == i) 
+			exit_miss_host();
+		else if (!memcmp(argv[i], "-?", 2))
+			print_help();
+		else if (!memcmp(argv[i], "-v", 2))
+			stat->options += OPT_VERBOSE;
+		else if (!memcmp(argv[i], "--ttl=", sizeof("--ttl=")))
+			stat->options += OPT_TTL;
+		else if (argv[i][0] == '-') {
+			printf("%s: invalid option -- '%s'\nTry 'ping -?' for more information.\n", argv[0], argv[i]);
+			exit(64);
+		}
+		else
+			return argv[i];
+		i++;
+	}
+	return NULL;
+}
+
 int main(int argc, char **argv) {
 
 	struct sockaddr_in *	ip_dst;
 	char			host[INET_ADDRSTRLEN];
 	unsigned short		data_bytes;
 	int			sockfd;	
-	struct stat_s		*stat;
+	struct stat_s *		stat;
 
 	unsigned short		w_time;
-
+	
+	char *			arg_host;
+	pid_t			pid;
 
 	signal(SIGINT, signalhandler);
 	stat = get_stat();
 	w_time = 1;
 	data_bytes = SIZE_PACKET - sizeof(struct icmphdr);
 
-	if (argc != 2) {
-		printf("ping: usage error: Destination address required\n");
-		return 1;
-	}
+	if (argc < 2)
+		exit_miss_host();
 
-	stat->host = argv[1];	
-	if ((ip_dst = resolve_addr(argv[1])) == NULL) {
+	arg_host = parse_args(argc, argv);
+	if (!arg_host)
+		exit_miss_host();	
+
+	stat->host = arg_host;	
+	if ((ip_dst = resolve_addr(stat->host)) == NULL) {
 		printf("ping: unknown host\n"); 
-		return 1;
+		return(EXIT_FAILURE);
 	}
 
 	if (inet_ntop(AF_INET, &ip_dst->sin_addr, host, INET_ADDRSTRLEN) == NULL) {
@@ -94,8 +153,12 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	stat->host = argv[1];
-	printf("PING %s (%s): %d data bytes\n", argv[1], host, data_bytes);
+	if (stat->options & OPT_VERBOSE) {
+		pid = getpid();
+		printf("PING %s (%s): %d data bytes, id 0x%x = %u\n", stat->host, host, data_bytes, pid, pid);
+	}
+	else
+		printf("PING %s (%s): %d data bytes\n", stat->host, host, data_bytes);
 
 	if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1) {
 		printf("socker call failed: %s  \n", strerror(errno));
