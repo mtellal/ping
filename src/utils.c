@@ -1,5 +1,16 @@
 #include <ft_ping.h>
 
+void	exit_miss_host() {
+	printf("ping: missing host operand\nTry 'ping -?' for more information\n");
+	exit(EX_USAGE); //64 - sysexits.h
+}
+
+void	exit_failure(char *msg) {
+	printf("%s", msg);
+	exit(EXIT_FAILURE);
+}
+
+
 // display raw data packet
 
 void display_datas(unsigned char *datas, int len) {

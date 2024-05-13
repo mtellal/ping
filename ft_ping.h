@@ -1,6 +1,3 @@
-
-
-
 #ifndef FT_PING
 #define FT_PING
 
@@ -12,8 +9,6 @@
 #include <netdb.h>
 
 #include <ifaddrs.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
@@ -25,12 +20,13 @@
 
 #include <stdlib.h>
 
+#include <stdio.h>
+
 #include <signal.h>
 
 #include <sys/time.h>
 
 #include <math.h>
-#include <stdio.h>
 
 #include <sysexits.h>
 
@@ -38,7 +34,10 @@
 #define OPT_TTL		2
 
 
-#define SIZE_PACKET 64
+#define SIZE_PACKET 	64
+#define DATA_BYTES	SIZE_PACKET - sizeof(struct icmphdr)
+
+
 
 struct stat_s {
 	char			*host;
@@ -49,13 +48,9 @@ struct stat_s {
 	suseconds_t		max; 
 	suseconds_t		stddev; 
 	suseconds_t		rtts[0xffff];
-	unsigned short		options;
+	unsigned short	options;
+	uint8_t			ttl;
 };
-
-
-// stat.c
-struct stat_s	*get_stat();
-
 
 
 struct icmp_packet {
@@ -63,9 +58,14 @@ struct icmp_packet {
 	char data[SIZE_PACKET - sizeof(struct icmphdr)];
 };
 
+
 unsigned short		checksum(void *data, int len);
 struct			icmp_packet create_packet();
 struct icmp_packet	create_packet();
+
+// parse.c
+char *			parse_args(int argc, char **argv);
+
 
 // recv.c
 int		recv_packet(int sockfd, struct sockaddr_in *ip_src);
@@ -76,9 +76,18 @@ unsigned short checksum(void *b, int len);
 struct icmp_packet		create_packet();
 int						send_packet(int sockfd, struct sockaddr_in ip_dst);
 
+// stat.c
+struct stat_s	*get_stat();
+void 			signalhandler(int s);
+
+
 // utils.c
-void display_datas(unsigned char *datas, int len);
-void print_iphdr(struct iphdr *iphdr);
-void print_icmphdr(struct icmphdr *icmphdr);
+void 			display_datas(unsigned char *datas, int len);
+void 			print_iphdr(struct iphdr *iphdr);
+void 			print_icmphdr(struct icmphdr *icmphdr);
+void			exit_miss_host();
+void			exit_failure(char *msg);
+
+
 
 #endif
