@@ -1,21 +1,24 @@
 #ifndef FT_PING
 #define FT_PING
 
-
 #include <errno.h>
 
 #include <sys/types.h>
+
 #include <sys/socket.h>
+
 #include <netdb.h>
 
 #include <ifaddrs.h>
+
 #include <arpa/inet.h>
+
 #include <string.h>
+
 #include <unistd.h>
 
-
-// netinet / [ip, ip_icmp, ...]
 #include <netinet/ip.h>
+
 #include <netinet/ip_icmp.h>
 
 #include <stdlib.h>
@@ -30,14 +33,16 @@
 
 #include <sysexits.h>
 
+
 #define OPT_VERBOSE	1
+
 #define OPT_TTL		2
 
-
 #define SIZE_PACKET 	64
-#define DATA_BYTES	SIZE_PACKET - sizeof(struct icmphdr)
 
+#define DEFAULT_TTL		64
 
+#define DATA_BYTES		SIZE_PACKET - sizeof(struct icmphdr)
 
 struct stat_s {
 	char			*host;
@@ -50,43 +55,51 @@ struct stat_s {
 	suseconds_t		rtts[0xffff];
 	unsigned short	options;
 	uint8_t			ttl;
+	uint8_t			err;
 };
-
 
 struct icmp_packet {
-	struct icmphdr icmphdr;
-	char data[SIZE_PACKET - sizeof(struct icmphdr)];
+	struct icmphdr 		icmphdr;
+	char 				data[SIZE_PACKET - sizeof(struct icmphdr)];
 };
 
+struct final_packet_s {
+	struct iphdr 		iphdr;
+	struct icmp_packet 	icmp_packet;	
+};
 
-unsigned short		checksum(void *data, int len);
-struct			icmp_packet create_packet();
-struct icmp_packet	create_packet();
+#define SIZE_IP_PACKET	sizeof(struct final_packet_s)
+
+
+
+unsigned short			checksum(void *data, int len);
+struct icmp_packet 		create_packet();
+struct icmp_packet		create_packet();
 
 // parse.c
-char *			parse_args(int argc, char **argv);
+char *					parse_args(int argc, char **argv);
 
 
 // recv.c
-int		recv_packet(int sockfd, struct sockaddr_in *ip_src);
-int 		parse_packet(unsigned char *data, struct timeval *tv_recv);
+int						recv_packet(int sockfd, struct sockaddr_in *ip_src);
+int 					parse_packet(unsigned char *data, struct timeval *tv_recv);
 
 // send.c
-unsigned short checksum(void *b, int len);
+unsigned short 			checksum(void *b, int len);
 struct icmp_packet		create_packet();
-int						send_packet(int sockfd, struct sockaddr_in ip_dst);
+int						send_packet(int sockfd, struct sockaddr_in * ip_dst);
 
 // stat.c
-struct stat_s	*get_stat();
-void 			signalhandler(int s);
+struct stat_s *			get_stat();
+void 					signalhandler(int s);
 
 
 // utils.c
-void 			display_datas(unsigned char *datas, int len);
-void 			print_iphdr(struct iphdr *iphdr);
-void 			print_icmphdr(struct icmphdr *icmphdr);
-void			exit_miss_host();
-void			exit_failure(char *msg);
+void 					display_datas(unsigned char *datas, int len);
+void 					print_iphdr(struct iphdr *iphdr);
+void 					print_icmphdr(struct icmphdr *icmphdr);
+void					exit_miss_host();
+void					exit_failure(char *msg);
 
 
 

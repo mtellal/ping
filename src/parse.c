@@ -20,7 +20,7 @@ int	valid_options(struct stat_s *stat, char *path, char *argv) {
 	stat = get_stat();
     if (!memcmp(argv, "--ttl=", strlen("--ttl="))) {
         ttl_value = (int)strtol(argv + 6, &end, 10);
-        if (end == argv + 6 || end != NULL){
+        if (end == argv + 6 || strlen(end)){
             printf("%s: invalid value near (%s)\n", path, argv + 6);
             exit(EXIT_FAILURE);
         }

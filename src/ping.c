@@ -35,11 +35,25 @@ void	ping_main_info(struct sockaddr_in *ip_dst, struct stat_s *stat) {
 
 int	init_socket() {
 	
-	int	sockfd;
+	int				sockfd;
+	struct stat_s	*stat;
+	int				i;
 
+	stat = get_stat();
 	if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1) {
-		printf("socket call failed: %s  \n", strerror(errno));
-		return EXIT_FAILURE;
+		printf("socket call failed: %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	if (!stat->ttl)
+		stat->ttl = DEFAULT_TTL;
+	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, (const char *)&stat->ttl, sizeof(stat->ttl)) == -1){
+		printf("ping: setsockopt call failed: (iphdr) %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	i = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (const char *)&i, sizeof(i)) == -1){
+		printf("ping: setsockopt call failed: (broadcast) %s\n", strerror(errno));
+		exit(EXIT_FAILURE);
 	}
 	return sockfd;
 }
@@ -73,7 +87,7 @@ int main(int argc, char **argv) {
 	sockfd = init_socket();
 
 	while (1) {	
-		if (send_packet(sockfd, *ip_dst) == -1)
+		if (send_packet(sockfd, ip_dst) == -1)
 			return(EXIT_FAILURE);
 		if (recv_packet(sockfd, ip_dst) == -1)
 			return(EXIT_FAILURE);
