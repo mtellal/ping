@@ -55,7 +55,7 @@ int	valid_options(struct stat_s *stat, char *path, char *argv) {
 char	*parse_args(int argc, char **argv) {
 
 	struct stat_s	*stat;
-	uint16_t	i;
+	uint16_t	    i;
 	
 	i = 1;
 	stat = get_stat();

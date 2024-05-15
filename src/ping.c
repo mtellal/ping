@@ -1,46 +1,44 @@
 #include <ft_ping.h>
 
-struct sockaddr_in *resolve_addr(char * addr){
+void  resolve_addr(struct stat_s * stat){
 
-	struct addrinfo hints;
-	struct addrinfo *res;
+	struct addrinfo 	hints;
+	struct addrinfo 	*res;
 
-	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
+	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	if (getaddrinfo(addr, 0, &hints, &res) != 0)
+	if (getaddrinfo(stat->host, 0, &hints, &res) != 0)
 		exit_failure("ping: unknown host\n");
-	if (res && res->ai_addr)
-		return (struct sockaddr_in *)res->ai_addr;
-	return NULL;
+	if (res && res->ai_addr) {
+		stat->ip_dst = *(struct sockaddr_in *)res->ai_addr;
+		free(res);
+	}
 }
 
 
-void	ping_main_info(struct sockaddr_in *ip_dst, struct stat_s *stat) {
+void	print_ping(struct stat_s *stat) {
 
-	pid_t	pid;
 	char	host[INET_ADDRSTRLEN];
 
-	if (inet_ntop(AF_INET, &ip_dst->sin_addr, host, INET_ADDRSTRLEN) == NULL) 
+	if (inet_ntop(AF_INET, &stat->ip_dst.sin_addr, host, INET_ADDRSTRLEN) == NULL) {
 		exit_failure("ping: inet_ntop call returned NULL (bad address)\n");
-	
-	if (stat->options & OPT_VERBOSE) {
-		pid = getpid();
-		printf("PING %s (%s): %ld data bytes, id 0x%x = %u\n", stat->host, host, DATA_BYTES, pid, pid);
 	}
+	
+	if (stat->options & OPT_VERBOSE) 
+		printf("PING %s (%s): %ld data bytes, id 0x%x = %u\n", stat->host, host, DATA_BYTES, stat->pid, stat->pid);
 	else
 		printf("PING %s (%s): %ld data bytes\n", stat->host, host, DATA_BYTES);
 }
 
-int	init_socket() {
+int	init_socket(struct stat_s *stat) {
 	
 	int				sockfd;
-	struct stat_s	*stat;
 	int				i;
 
-	stat = get_stat();
-	if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1) {
+	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	if (sockfd  == -1) {
 		printf("socket call failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -58,39 +56,36 @@ int	init_socket() {
 	return sockfd;
 }
 
+
 int main(int argc, char **argv) {
 
-	struct sockaddr_in *	ip_dst;
-	int			sockfd;	
 	struct stat_s *		stat;
-
-	unsigned short		w_time;
-	
-	char *			arg_host;
-
-	signal(SIGINT, signalhandler);
-	stat = get_stat();
-	w_time = 1;
 
 	if (argc < 2)
 		exit_miss_host();
 
-	if ((arg_host = parse_args(argc, argv)) == NULL)
+
+	stat = get_stat();
+	memset(stat, 0, sizeof(struct stat_s));
+
+	stat->host = parse_args(argc, argv);
+	if (stat->host == NULL)
 		exit_miss_host();	
-
-	stat->host = arg_host;	
 	
-	ip_dst = resolve_addr(arg_host);
+	
+	stat->pid = getpid();
+	stat->sockfd = init_socket(stat);
+	resolve_addr(stat);
 
-	ping_main_info(ip_dst, stat);
+	print_ping(stat);
 
-	sockfd = init_socket();
+	signal(SIGINT, signalhandler);
+	signal(SIGALRM, signalhandler);
 
-	while (1) {	
-		if (send_packet(sockfd, ip_dst) == -1)
+	signalhandler(SIGALRM);
+
+	while (1) {
+		if (recv_packet(stat->sockfd) == -1)
 			return(EXIT_FAILURE);
-		if (recv_packet(sockfd, ip_dst) == -1)
-			return(EXIT_FAILURE);
-		sleep(w_time);
 	}
 }

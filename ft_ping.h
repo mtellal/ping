@@ -45,27 +45,25 @@
 #define DATA_BYTES		SIZE_PACKET - sizeof(struct icmphdr)
 
 struct stat_s {
-	char			*host;
-	unsigned short		p_sent;
-	unsigned short		p_recv;
-	suseconds_t		min; 
-	suseconds_t		tot; 
-	suseconds_t		max; 
-	suseconds_t		stddev; 
-	suseconds_t		rtts[0xffff];
-	unsigned short	options;
-	uint8_t			ttl;
-	uint8_t			err;
+	char *					host;
+	uint16_t				p_sent;
+	uint16_t				p_recv;
+	suseconds_t				min; 
+	suseconds_t				tot; 
+	suseconds_t				max; 
+	suseconds_t				stddev; 
+	suseconds_t				rtts[0xffff];
+	unsigned short			options;
+	uint8_t					ttl;
+	uint8_t					err;
+	uint16_t				pid;
+	int						sockfd;
+	struct sockaddr_in 		ip_dst;
 };
 
 struct icmp_packet {
 	struct icmphdr 		icmphdr;
 	char 				data[SIZE_PACKET - sizeof(struct icmphdr)];
-};
-
-struct final_packet_s {
-	struct iphdr 		iphdr;
-	struct icmp_packet 	icmp_packet;	
 };
 
 #define SIZE_IP_PACKET	sizeof(struct final_packet_s)
@@ -81,13 +79,12 @@ char *					parse_args(int argc, char **argv);
 
 
 // recv.c
-int						recv_packet(int sockfd, struct sockaddr_in *ip_src);
-int 					parse_packet(unsigned char *data, struct timeval *tv_recv);
+int						recv_packet(int sockfd);
 
 // send.c
 unsigned short 			checksum(void *b, int len);
-struct icmp_packet		create_packet();
-int						send_packet(int sockfd, struct sockaddr_in * ip_dst);
+struct icmp_packet		create_packet(struct stat_s * stat);
+int						send_packet(struct stat_s * stat);
 
 // stat.c
 struct stat_s *			get_stat();
