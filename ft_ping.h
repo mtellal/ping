@@ -34,9 +34,11 @@
 #include <sysexits.h>
 
 
-#define OPT_VERBOSE	1
+#define OPT_VERBOSE		1
 
-#define OPT_TTL		2
+#define OPT_TTL			2
+
+#define OPT_NUMBER		4
 
 #define SIZE_PACKET 	64
 
@@ -54,7 +56,8 @@ struct stat_s {
 	suseconds_t				stddev; 
 	suseconds_t				rtts[0xffff];
 	unsigned short			options;
-	uint8_t					ttl;
+	uint8_t					opt_ttl;
+	unsigned long			opt_number;
 	uint8_t					err;
 	uint16_t				pid;
 	int						sockfd;

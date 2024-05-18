@@ -54,7 +54,7 @@ int	print_packet_infos(struct iphdr *iphdr, struct icmphdr *icmphdr, int error) 
 		print_infos_error(icmphdr, stat->options & OPT_VERBOSE);
 	}
 	else {
-		printf("icmp_seq=%u ttl=%u", icmphdr->un.echo.sequence, iphdr->ttl);
+		printf("icmp_seq=%u ttl=%u", htons(icmphdr->un.echo.sequence), iphdr->ttl);
 	}
 	return 0;
 }
@@ -73,7 +73,6 @@ int	parse_packet(unsigned char *datas, struct timeval *tv_recv) {
 	len_iphdr = (uint16_t)(iphdr->ihl * 4);
 	icmphdr = (struct icmphdr *)(datas + len_iphdr);		
 	
-
 	if (icmphdr->type != ICMP_ECHOREPLY && 
 		(icmphdr->type == ICMP_DEST_UNREACH || 
 		icmphdr->type == ICMP_TIME_EXCEEDED ||
@@ -93,6 +92,8 @@ int	parse_packet(unsigned char *datas, struct timeval *tv_recv) {
 		tv_send = (struct timeval *)(datas + (iphdr->ihl * 4) + 8);
 		print_packet_infos(iphdr, icmphdr, 0);
 		print_time(tv_send, tv_recv);
+		if (stat->options & OPT_NUMBER && stat->opt_number == stat->p_recv)
+			signalhandler(SIGINT);
 	}
 	return 1;
 }
@@ -102,13 +103,8 @@ int	recv_packet(int sockfd) {
 	int 				bytes;
 	unsigned char 		datas[IP_MAXPACKET];
 	struct timeval		tv_recv;
-	struct sockaddr_in	ip;
-	socklen_t			len;
 
-	memset(&ip, 0, sizeof(ip));	
 	memset(&datas, 0, sizeof(datas));	
-	len = (socklen_t)sizeof(ip);
-	(void)len;
 	bytes = recvfrom(sockfd, datas, IP_MAXPACKET, MSG_DONTWAIT, NULL, 0);
 	gettimeofday(&tv_recv, NULL);
 	if (bytes == -1) 

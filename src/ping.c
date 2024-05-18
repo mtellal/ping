@@ -13,7 +13,7 @@ void  resolve_addr(struct stat_s * stat){
 		exit_failure("ping: unknown host\n");
 	if (res && res->ai_addr) {
 		stat->ip_dst = *(struct sockaddr_in *)res->ai_addr;
-		free(res);
+		freeaddrinfo(res);
 	}
 }
 
@@ -42,9 +42,7 @@ int	init_socket(struct stat_s *stat) {
 		printf("socket call failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	if (!stat->ttl)
-		stat->ttl = DEFAULT_TTL;
-	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, (const char *)&stat->ttl, sizeof(stat->ttl)) == -1){
+	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, (const char *)&stat->opt_ttl, sizeof(stat->opt_ttl)) == -1){
 		printf("ping: setsockopt call failed: (iphdr) %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}

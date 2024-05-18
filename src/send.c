@@ -43,7 +43,6 @@ int send_packet(struct stat_s * stat) {
 	bytes = sendto(stat->sockfd, &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *)&ip, sizeof(ip));
 	if (bytes == -1) {
 		printf("sending packet: %s \n", strerror(errno));
-		// free(stat->ip_dst);
 		exit(1);
 	}
 	stat->p_sent++;
