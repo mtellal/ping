@@ -38,7 +38,13 @@ if [ ! -f ./inetutils-2.0/ping/ping ]; then
 fi
 
 if [ ! -d ./out ]; then
-    mkdir -p out/ping out/ft_ping > /dev/null
+    mkdir -p out/ping/m \
+    out/ft_ping/m \
+    out/ft_ping/opt \
+    out/ping/opt \
+    out/ping/bonus \
+    out/ft_ping/bonus \
+    > /dev/null
 fi  
 
 print_res_file() {
@@ -51,11 +57,155 @@ print_res_file() {
     echo -e ${leaks_line}
 }
 
+############################################################################
+#                           M A N D A T O R Y                              #
+############################################################################
+
+
+function mandatory() {
 echo -e "${WHITE} Launching tests ${RESET}"
 for host in ${mandatory[@]}; do
+
+    file_ping=out/ping/m/$host
+    file_ft_ping=out/ft_ping/m/$host
+
     echo -e "\n${WHITE} $host ...${RESET}"
-    timeout -s SIGINT 2s valgrind --leak-check=full --show-leak-kinds=all ./inetutils-2.0/ping/ping $host &> out/ping/$host
-    print_res_file out/ping/$host ping
-    timeout -s SIGINT 2s valgrind --leak-check=full --show-leak-kinds=all ./ft_ping $host &> out/ft_ping/$host
-    print_res_file out/ft_ping/$host ft_ping
+   
+    timeout -s SIGINT $sec valgrind --leak-check=full --show-leak-kinds=all ./inetutils-2.0/ping/ping $host &> $file_ping
+    print_res_file $file_ping ping
+    
+    timeout -s SIGINT $sec valgrind --leak-check=full --show-leak-kinds=all ./ft_ping $host &> $file_ft_ping
+    print_res_file $file_ft_ping ft_ping
 done
+}
+
+############################################################################
+#                      M A N D A T O R Y   O P T                           #
+############################################################################
+
+
+
+#tester les options -? -v
+args=(
+    " -v"
+    " -vwdf"
+    " -v google.com"
+    " -a -v"
+    " -a -v google.com"
+    " -av google.com"
+    " -? google.com"
+    " -?google.com"
+    " -? "
+    " -?v "
+    " -v? "
+    " -vvvvvvvvvvvvv "
+    " -vvvvvvvvvvvvv google.com"
+)
+
+mandatory_opt() {
+
+rm -rf out/ft_ping/opt/* out/ping/opt/*
+
+echo -e "${WHITE} Launching tests ${RESET}"
+for ((i=0; i<${#args[@]};i++)); do
+
+    file_ping=out/ping/opt/$i
+    file_ft_ping=out/ft_ping/opt/$i
+
+    echo -e "\n${WHITE} ${args[$i]} ...${RESET}"
+    timeout -s SIGINT $sec valgrind --leak-check=full --show-leak-kinds=all ./inetutils-2.0/ping/ping ${args[$i]} &> ${file_ping}
+    print_res_file ${file_ping} ping
+    
+    timeout -s SIGINT $sec valgrind --leak-check=full --show-leak-kinds=all ./ft_ping ${args[$i]} &> ${file_ft_ping}
+    print_res_file ${file_ft_ping} ft_ping
+done
+}
+
+
+############################################################################
+#                          B O N U S   O P T --TTL                         #
+############################################################################
+
+
+#tester les options -? -v
+bonus_args_ttl=(
+    " -ttl=5"
+    " -ttl="
+    " -ttl=5 google.com"
+    " -ttl=5 google.com"
+    " --ttl=5 google.com"
+    " --ttl=-5 google.com"
+    " --ttl=0 google.com"
+    " --ttl=256 google.com"
+    " --ttl=255 google.com"
+    " --ttl=65465 google.com"
+    " --ttl=sdfwdfw google.com"
+)
+
+bonus_ttl() {
+
+rm -rf out/ft_ping/bonus/* out/ping/bonus/*
+
+echo -e "${WHITE} Launching tests ${RESET}"
+for ((i=0; i<${#bonus_args_ttl[@]};i++)); do
+
+    file_ping=out/ping/bonus/$i
+    file_ft_ping=out/ft_ping/bonus/$i
+
+    echo -e "\n${WHITE} ${bonus_args_ttl[$i]} ...${RESET}"
+    timeout -s SIGINT $sec valgrind --leak-check=full --show-leak-kinds=all ./inetutils-2.0/ping/ping ${bonus_args_ttl[$i]} &> ${file_ping}
+    print_res_file ${file_ping} ping
+    
+    timeout -s SIGINT $sec valgrind --leak-check=full --show-leak-kinds=all ./ft_ping ${bonus_args_ttl[$i]} &> ${file_ft_ping}
+    print_res_file ${file_ft_ping} ft_ping
+done
+}
+
+############################################################################
+#                          B O N U S   O P T --COUNT                       #
+############################################################################
+
+
+#tester les options -? -v
+bonus_args_count=(
+    " -count=5"
+    " -count="
+    " -count=5 google.com"
+    " -count=5 google.com"
+    " --count=5 google.com"
+    " --count=-5 google.com"
+    " --count=0 google.com"
+    " --count=65465 google.com"
+    " --count=sdfwdfw google.com"
+)
+
+bonus_count() {
+
+rm -rf out/ft_ping/bonus/* out/ping/bonus/*
+
+echo -e "${WHITE} Launching tests ${RESET}"
+for ((i=0; i<${#bonus_args_count[@]};i++)); do
+
+    file_ping=out/ping/bonus/c_$i
+    file_ft_ping=out/ft_ping/bonus/c_$i
+
+    echo -e "\n${WHITE} ${bonus_args_count[$i]} ...${RESET}"
+    timeout -s SIGINT 10s valgrind --leak-check=full --show-leak-kinds=all ./inetutils-2.0/ping/ping ${bonus_args_count[$i]} &> ${file_ping}
+    print_res_file ${file_ping} ping
+    
+    timeout -s SIGINT 10s valgrind --leak-check=full --show-leak-kinds=all ./ft_ping ${bonus_args_count[$i]} &> ${file_ft_ping}
+    print_res_file ${file_ft_ping} ft_ping
+done
+}
+
+if [ "$1" == "count" ];then
+    bonus_count
+elif [ "$1" == "ttl" ];then
+    bonus_ttl
+elif [ "$1" == "bonus" ];then
+    bonus_ttl
+    bonus_count
+else
+    mandatory
+    mandatory_opt
+fi
