@@ -45,7 +45,7 @@ int	print_packet_infos(struct iphdr *iphdr, struct icmphdr *icmphdr, int error) 
 
 	memset(src, 0, INET_ADDRSTRLEN);
 	if (inet_ntop(AF_INET, &iphdr->saddr, src, INET_ADDRSTRLEN) == NULL) {
-		printf("Error: (recv packet) inet_ntop call failed (bad address) %s\n", strerror(errno));
+		fprintf(stderr, "Error: (recv packet) inet_ntop call failed (bad address) %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}	
 

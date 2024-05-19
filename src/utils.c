@@ -1,13 +1,12 @@
 #include <ft_ping.h>
 
 void	exit_miss_host() {
-	char *msg = "ping: missing host operand\nTry 'ping -?' for more information\n";
-	write(STDERR_FILENO, msg, strlen(msg));
+	fprintf(stderr, "ping: missing host operand\nTry 'ping -?' for more information\n");
 	exit(EX_USAGE); //64 - sysexits.h
 }
 
 void	exit_failure(char *msg) {
-	write(STDERR_FILENO, msg, strlen(msg));
+	fprintf(stderr, "%s", msg);
 	exit(EXIT_FAILURE);
 }
 

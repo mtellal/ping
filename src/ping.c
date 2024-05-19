@@ -39,16 +39,16 @@ int	init_socket(struct stat_s *stat) {
 
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd  == -1) {
-		printf("socket call failed: %s\n", strerror(errno));
+		fprintf(stderr, "socket call failed: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	if (setsockopt(sockfd, IPPROTO_IP, IP_TTL, (const char *)&stat->opt_ttl, sizeof(stat->opt_ttl)) == -1){
-		printf("ping: setsockopt call failed: (iphdr) %s\n", strerror(errno));
+		fprintf(stderr, "ping: setsockopt call failed: (iphdr) %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	i = 1;
 	if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (const char *)&i, sizeof(i)) == -1){
-		printf("ping: setsockopt call failed: (broadcast) %s\n", strerror(errno));
+		fprintf(stderr, "ping: setsockopt call failed: (broadcast) %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	return sockfd;

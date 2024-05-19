@@ -22,7 +22,7 @@ int	valid_options(struct stat_s *stat, char *path, char *argv) {
     if (!memcmp(argv, "--count=", 8)) {
         tmp_value = (int)strtol(argv + 8, &end, 10);
         if (end == argv + 8 || strlen(end)){
-            printf("%s: invalid value near (%s)\n", path, argv + 6);
+		fprintf(stderr, "%s: invalid value near (%s)\n", path, argv + 6);
             exit(EXIT_FAILURE);
         }
         if (tmp_value > 0) {
@@ -34,15 +34,15 @@ int	valid_options(struct stat_s *stat, char *path, char *argv) {
     if (!memcmp(argv, "--ttl=", 6)) {
         tmp_value = (int)strtol(argv + 6, &end, 10);
         if (end == argv + 6 || strlen(end)){
-            printf("%s: invalid value near (%s)\n", path, argv + 6);
+            fprintf(stderr,"%s: invalid value near (%s)\n", path, argv + 6);
             exit(EXIT_FAILURE);
         }
         if (tmp_value == 0) {
-            printf("%s: option value too small: %s\n", path, argv + 6);
+            fprintf(stderr, "%s: option value too small: %s\n", path, argv + 6);
             exit(EXIT_FAILURE);
         }
         else if (tmp_value > 255 || tmp_value < 0) {
-            printf("%s: option value too big: %s\n", path, argv + 6);
+            fprintf(stderr, "%s: option value too big: %s\n", path, argv + 6);
             exit(EXIT_FAILURE);
         }
         stat->opt_ttl = tmp_value;
@@ -56,7 +56,7 @@ int	valid_options(struct stat_s *stat, char *path, char *argv) {
             else if (argv[j] == '?')
                 print_help();
             else {
-                printf("%s: invalid option -- '%c'\nTry 'ping -?' for more information.\n", path, argv[j]);
+                fprintf(stderr, "%s: invalid option -- '%c'\nTry 'ping -?' for more information.\n", path, argv[j]);
                 exit(EX_USAGE);
             }
         }
