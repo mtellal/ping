@@ -45,6 +45,7 @@ void signalhandler(int s) {
 			stddev = (suseconds_t)calcul_stddev(stat);
 			printf("round-trip min/avg/max/stddev = %ld,%03ld/%ld,%03ld/%ld,%03ld/%ld,%03ld ms\n", stat->min / 1000, stat->min % 1000, avg / 1000, avg % 1000, stat->max / 1000, stat->max % 1000, stddev / 1000, stddev % 1000);
 		}
+		close(stat->sockfd);
 		exit(EXIT_SUCCESS);
 	}
 	else if (s == SIGALRM) {
