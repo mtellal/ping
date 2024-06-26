@@ -62,7 +62,9 @@ int main(int argc, char **argv) {
 	if (argc < 2)
 		exit_miss_host();
 
-
+	if (getuid()) {
+		exit_failure("ping: Lacking privilege for icmp socket.\n");
+	}
 	stat = get_stat();
 	memset(stat, 0, sizeof(struct stat_s));
 
